@@ -87,21 +87,23 @@ Add to Compare → Side-by-Side Comparison
 
 - **Dual Search Modality**: Search by explicit destination or discover ideal destinations dynamically based on travel interests and budget.
 - **Deterministic 100-Point Recommendation Engine**: 
-  - Budget fit (30 pts)
-  - Duration fit (25 pts)
-  - Travel type fit (25 pts)
-  - Month availability (20 pts)
+  - Budget fit (**25 pts**)
+  - Travel interest match (**25 pts**; also a strict hard filter)
+  - Duration fit (**20 pts**)
+  - Travel type fit (**15 pts**; supports Solo, Couple, Family, Group)
+  - Month availability (**10 pts**)
+  - Starting city departure (**5 pts**; also a strict hard filter)
 - **Strict Hard Filtering**:
   - Starting city constraint
-  - Travel interest constraint (strict theme matching)
-  - Explicit destination constraint
-  - Active package status constraint
-  - >20% over-budget hard exclusion
+  - Travel interest constraint (strict theme matching; non-matching packages are excluded completely)
+  - Explicit destination constraint (when a destination is selected)
+  - Active package status constraint (`is_active = TRUE`)
+  - Over-budget hard exclusion (packages exceeding budget by more than 20% are excluded)
 - **Factual, Explainable Insights**: No black-box algorithms or unsupported superlative claims ("best", "winner", "perfect for you", "most popular"). Every match reason and mismatch notice is fact-checked against real database values.
 - **Side-by-Side Package Comparison**:
   - Compare 2 to 3 packages simultaneously.
   - Guard against 4th package addition with clear UI guidance.
-  - Interactive traveller headcount multiplier updating total pricing and per-person cost.
+  - Interactive traveller headcount multiplier ($1$ to $10+$ travellers) updating total pricing and per-person cost.
   - Objective value indicators: lowest price, shortest duration, lowest cost per day, most inclusions.
 - **Seamless Pagination**: Responsive pagination preserving active filter queries and active comparison selections across page navigation.
 - **Demo Source Transparency**: Dedicated verification views showing provider attribution, catalog source type, and verification status.
@@ -138,12 +140,11 @@ Next.js Frontend (Port 3000)
         ↓ (HTTP / REST JSON)
 Flask REST API (Port 5000)
         ↓
-Routes (Blueprints: packages, destinations, compare, discover, providers, health)
+Routes (Blueprints: packages, destinations, discover, recommendations, operators, themes, providers, health)
         ↓
 Business Services
-        ├── Recommendation Service (Deterministic 100-pt scoring)
-        ├── Comparison Service (Matrix generation, value highlights)
-        ├── Search Service (Constraint application)
+        ├── Recommendation Service (Deterministic 100-pt scoring & factual explanations)
+        ├── Search Logic (Hard constraints & soft scoring application)
         └── In-Memory Cache Service (Taxonomy caching with TTL)
         ↓
 Provider Layer
@@ -156,28 +157,28 @@ Demo Provider (MySQL Adapter)
 MySQL Database (smart_travel_db)
 ```
 
-### Recommendation and Comparison Flow Details
-- **Recommendation Service**: Evaluates eligible packages against user preferences using normalized distance metrics for budget and duration, calculating deterministic scores with data-grounded reasons.
-- **Comparison Service**: Consolidates 2 or 3 selected package identifiers, calculates per-day costs, normalizes day-by-day itineraries, tallies inclusions/exclusions, and computes factual value highlights without declaring subjective "overall winners".
+### Recommendation and Comparison Details
+- **Recommendation Service**: Evaluates eligible packages against user preferences using normalized distance metrics for budget and duration, calculating deterministic 100-point scores with data-grounded reasons and factual mismatch notifications.
+- **Comparison Functionality**: The frontend comparison view (`/compare`) fetches individual package details for the 2–3 selected packages via `GET /api/v1/packages/<id>`, dynamically calculates headcount-adjusted costs, compares day-by-day itineraries, counts inclusions/exclusions, and computes factual value highlights without declaring subjective "overall winners".
 
 ---
 
 ## 7. Database Overview
 
-The MySQL database `smart_travel_db` enforces relational integrity across 10 normalized tables:
+The MySQL database `smart_travel_db` enforces relational integrity across 10 normalized tables matching the implemented schema:
 
 | Table | Description |
 |---|---|
-| `destinations` | 25 Indian destinations with state, region, description, image, and best season |
-| `operators` | 10 fictional demo tour operators with ratings, verified badges, and licenses |
-| `themes` | 10 travel themes (Beach, Heritage, Adventure, Wildlife, Hill Station, etc.) |
-| `packages` | 107 total packages (103 active, 4 inactive) with duration, base price, starting city |
-| `package_themes` | Many-to-many junction mapping packages to themes |
-| `package_travel_types` | Allowed travel types (Solo, Couple, Family, Friends, Group) per package |
+| `destinations` | 25 Indian destinations with `name`, `region`, `country`, `description`, and `image_url` |
+| `operators` | 10 fictional demo tour operators with `name`, `rating`, `website_url`, `contact_email`, and `contact_phone` |
+| `themes` | 10 travel themes with `name`, `slug`, and `description` |
+| `packages` | 107 total packages (103 active, 4 inactive) with `name`, `starting_city`, `duration_days`, `duration_nights`, `price_per_person`, `is_active`, `hotel_info`, `meals_info`, `transportation_info`, `sightseeing_info`, `activities_info`, `featured_image_url`, and `source_url` |
+| `package_themes` | Many-to-many junction table mapping `packages.id` to `themes.id` |
+| `package_travel_types` | Allowed travel types per package from the enum (`Solo`, `Couple`, `Family`, `Group`) |
 | `package_availability_months` | Operating months (1–12) per package |
-| `itineraries` | Day-by-day itinerary entries with titles, activities, meals, and accommodations |
-| `package_inclusions` | Line-item inclusions (Hotels, meals, transfers, guides, entry tickets) |
-| `package_exclusions` | Clear exclusion notices (Airfare, personal expenses, insurance) |
+| `package_itineraries` | Day-by-day itinerary entries with `day_number`, `title`, `description`, `accommodation`, and `meals_provided` |
+| `package_inclusions` | Line-item inclusions (`description`) per package |
+| `package_exclusions` | Line-item exclusions (`description`) per package |
 
 ---
 
@@ -203,86 +204,102 @@ All API endpoints follow a standardized, secure JSON response envelope:
 }
 ```
 
-### Registered Endpoints
+### Registered Endpoints (14 Actual Endpoints)
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/v1/health` | Service health check |
 | `GET` | `/api/v1/health/db` | Database connectivity verification |
-| `GET` | `/api/v1/destinations` | List all destinations (supports region/budget filtering) |
-| `GET` | `/api/v1/destinations/<id>` | Retrieve destination details |
-| `GET` | `/api/v1/operators` | List demo tour operators |
-| `GET` | `/api/v1/operators/<id>` | Retrieve operator details |
-| `GET` | `/api/v1/themes` | List all travel themes |
-| `GET` | `/api/v1/themes/<id>` | Retrieve theme details |
-| `GET` | `/api/v1/packages` | Search & score packages (supports pagination, hard/soft filters) |
-| `GET` | `/api/v1/packages/<id>` | Full package details with itinerary and inclusions |
-| `GET` | `/api/v1/packages/compare` | Compare 2–3 packages by IDs (`?ids=1,2,3`) |
-| `GET` | `/api/v1/discover/destinations` | Destination discovery with suitability scores |
-| `GET` | `/api/v1/recommendations/packages` | Top-recommended packages based on preferences |
-| `GET` | `/api/v1/providers` | Provider registry status and health |
-| `GET` | `/api/v1/providers/search` | Provider-agnostic package search |
+| `GET` | `/api/v1/destinations` | List destinations with pagination (`page`, `per_page`) and optional `search`/`name` and `country` filters |
+| `GET` | `/api/v1/destinations/<id>` | Retrieve single destination details by ID |
+| `GET` | `/api/v1/operators` | List demo tour operators with pagination and optional name search |
+| `GET` | `/api/v1/operators/<id>` | Retrieve single operator details by ID |
+| `GET` | `/api/v1/themes` | List all travel themes (cached in-memory) |
+| `GET` | `/api/v1/themes/<id>` | Retrieve single theme details by ID |
+| `GET` | `/api/v1/packages` | Search & score packages (supports pagination, hard filters, soft preferences, and match explanations) |
+| `GET` | `/api/v1/packages/<id>` | Full package details including day-by-day itinerary, inclusions, exclusions, and operator info |
+| `GET` | `/api/v1/discover/destinations` | Destination discovery with suitability scoring and data-grounded reasons based on matching packages |
+| `GET` | `/api/v1/recommendations/packages` | Top-recommended packages based on user preferences and hard constraints |
+| `GET` | `/api/v1/providers` | Provider registry status, health, and enablement |
+| `GET` | `/api/v1/providers/search` | Provider-agnostic package search across enabled providers |
+
+> **Note on Package Comparison**: Side-by-side package comparison is conducted by requesting the selected package IDs via `GET /api/v1/packages/<id>` and assembling the comparative matrix client-side in the `/compare` interface.
 
 ---
 
 ## 9. Recommendation Logic & Scoring Engine
 
 ### Hard Filters (Pre-requisites for Inclusion)
-1. **Starting City**: If specified, the package departure city must match.
-2. **Travel Interest**: If specified, the package must possess a matching theme. Non-matching packages are excluded.
-3. **Explicit Destination**: If searching for a specific destination, all other destinations are excluded.
-4. **Active Packages Only**: Inactive packages (`is_active = FALSE`) are excluded from search results.
-5. **Over-Budget Cap**: Packages exceeding user budget by more than 20% are excluded.
+1. **Starting City**: The package departure city must match the user's starting city (case-insensitive).
+2. **Travel Interest**: **HARD FILTER** — If a travel interest is selected, the package **must** have a matching theme (`Theme.name` or `Theme.slug`, case-insensitive). Non-matching packages are excluded completely.
+3. **Explicit Destination**: If searching for a specific destination, packages for all other destinations are excluded.
+4. **Active Packages Only**: Inactive packages (`is_active = FALSE`) are strictly excluded from search and recommendation results.
+5. **Over-Budget Cap**: Packages exceeding the user's total budget by more than 20% are excluded.
 
 ### 100-Point Deterministic Soft Scoring
-Eligible packages are scored across four objective dimensions:
+Eligible packages that pass all hard filters are scored across six factual dimensions:
 
-1. **Budget Fit (30 Points)**:
-   - Price $\le$ Budget: **30 pts**
-   - Budget $<$ Price $\le 1.10 \times$ Budget: **20 pts**
-   - $1.10 \times \text{Budget} < \text{Price} \le 1.20 \times \text{Budget}$: **10 pts**
-   - Price $> 1.20 \times$ Budget: **0 pts** (or hard excluded if budget filter applied)
+1. **Budget Fit (Max 25 Points)**:
+   - Estimated total cost $\le$ Budget: **25 pts** (`within_budget`)
+   - Over budget by $\le 10\%$: **18 pts** (`over_budget`, within 10% fallback)
+   - Over budget by $> 10\%$ and $\le 20\%$: **10 pts** (`over_budget`, within 20% fallback)
+   - Over budget by $> 20\%$: **0 pts** (excluded by hard filter)
 
-2. **Duration Fit (25 Points)**:
-   - Exact match: **25 pts**
-   - Within $\pm 1$ day: **18 pts**
-   - Within $\pm 2$ days: **10 pts**
-   - Deviation $> 2$ days: **0 pts**
+2. **Travel Interest Match (25 Points)**:
+   - Matches user's selected interest/theme: **25 pts** (guaranteed for all returned packages due to the hard filter)
 
-3. **Travel Type Fit (25 Points)**:
-   - Matching travel type (e.g., Couple, Family, Solo): **25 pts**
-   - Non-matching: **0 pts**
+3. **Duration Fit (Max 20 Points)**:
+   - Exact duration match: **20 pts**
+   - Within $\pm 1$ day: **16 pts**
+   - Within $\pm 2$ days: **12 pts**
+   - Within $\pm 3$ days: **8 pts**
+   - Deviation $> 3$ days: **4 pts**
 
-4. **Month Availability (20 Points)**:
-   - Package operates in requested month: **20 pts**
-   - Non-matching: **0 pts**
+4. **Travel Type Fit (Max 15 Points)**:
+   - Package includes the requested travel type (`Solo`, `Couple`, `Family`, `Group`): **15 pts**
+   - Does not include the requested travel type: **0 pts**
+
+5. **Month Availability (Max 10 Points)**:
+   - Package operates in the requested month (1–12): **10 pts**
+   - Not operating in the requested month: **0 pts**
+
+6. **Starting City Departure (5 Points)**:
+   - Departs from the requested starting city: **5 pts** (guaranteed for all returned packages due to the hard filter)
+
+$$\text{Total Match Score} = 25 (\text{Budget}) + 25 (\text{Interest}) + 20 (\text{Duration}) + 15 (\text{Travel Type}) + 10 (\text{Month}) + 5 (\text{Starting City}) = 100 \text{ Points}$$
+
+### Data-Grounded Explanations
+- **Match Reasons**: Generated strictly from verified package attributes (e.g., *"Fits your ₹40,000 total budget"*, *"Matches your Adventure interest"*, *"Matches your 5-day duration preference"*, *"Suitable for Family travel"*, *"Available in October"*, *"Departs from your starting city (Delhi)"*).
+- **Mismatches**: Factual callouts when preferences are not fully met (e.g., *"₹2,500 above your selected budget"*, *"Package is 6 days instead of your preferred 5 days"*, *"Designed for Solo, Group travel"*).
+- **Zero Superlatives**: Unsupported promotional claims (e.g., *"best"*, *"winner"*, *"most popular"*, *"perfect for you"*) are strictly prohibited by code checks.
 
 ---
 
 ## 10. Comparison Functionality
 
-- **Capacity**: Side-by-side comparison of 2 or 3 packages.
-- **Safety**: Adding a 4th package is prevented with a clear alert indicating the 3-package limit.
-- **Persistence**: Comparison selections are preserved in local storage and URL query params across pagination and navigation.
-- **Dynamic Headcount**: An interactive traveller selector ($1$ to $10$ travellers) dynamically updates total package pricing and displays individual per-person costs.
+- **Capacity**: Side-by-side comparison of 2 or 3 packages simultaneously.
+- **Safety**: Adding a 4th package is blocked with an informative alert indicating the 3-package limit.
+- **Persistence**: Comparison selections persist across pagination, filter changes, and navigation via local state and URL query parameters (`?ids=1,2,3`).
+- **Dynamic Headcount**: An interactive traveller selector ($1$ to $10+$ travellers) dynamically recalculates total package costs while displaying individual per-person pricing.
 - **Objective Value Analysis**:
   - Highlights lowest total price.
   - Highlights shortest duration.
   - Highlights lowest cost per day.
-  - Highlights package with the most inclusions.
-- **Zero Winner Bias**: Does not declare subjective "overall winners", letting users make informed choices based on objective metrics.
+  - Highlights package with the highest number of inclusions.
+- **Zero Winner Bias**: Does not declare an overall winner, allowing users to evaluate trade-offs objectively.
 
 ---
 
 ## 11. Demo Dataset Specifications
 
 The local MySQL database contains a curated demonstration inventory:
-- **25 Destinations**: Covering North, South, West, East, and Central India.
-- **10 Tour Operators**: Clearly fictional demo agencies (e.g., "Himalayan Horizons Demo", "Coastal Breeze Holidays Demo") with realistic contact profiles and sample license numbers.
+- **25 Destinations**: Covering North, South, West, East, and Central India (e.g., Manali, Goa, Jaipur, Munnar, Varanasi, Ladakh, Andaman, Rishikesh, Darjeeling, etc.).
+- **10 Tour Operators**: Fictional demo agencies (e.g., "Himalayan Horizons Demo", "Coastal Breeze Holidays Demo", "Royal Rajasthan Tours Demo") with realistic contact profiles and sample ratings.
 - **10 Travel Themes**: Beach, Heritage, Adventure, Wildlife, Hill Station, Pilgrimage, Honeymoon, Trekking, Luxury, Cultural.
+- **4 Travel Types**: Solo, Couple, Family, Group.
 - **107 Packages**: 
   - **103 Active Packages**
-  - **4 Inactive Packages** (verifying soft-delete / inactive package filtering)
+  - **4 Inactive Packages** (used to verify inactive package filtering)
 - **Data Integrity**: Every active package includes complete day-by-day itineraries, itemized inclusions, exclusions, travel types, and operating months.
 
 ---
@@ -290,11 +307,11 @@ The local MySQL database contains a curated demonstration inventory:
 ## 12. Provider-Ready Architecture
 
 The platform architecture is decoupled and extensible for future external travel integrations:
-- **BaseTravelProvider**: Defines an abstract contract (`search_packages`, `get_package_details`, `health_check`).
-- **NormalizedPackage DTO**: Uniform schema translating provider data to a consistent structure (`provider`, `source_type`, `external_id`, `identity`).
-- **ProviderRegistry**: Centrally enables or disables providers via configuration flags.
+- **BaseTravelProvider (`backend/app/providers/base.py`)**: Defines an abstract contract (`search_packages`, `get_package_details`, `health_check`).
+- **NormalizedPackage DTO (`backend/app/schemas/package_dto.py`)**: Uniform schema translating provider data to a consistent structure (`provider`, `source_type`, `external_id`, `identity`).
+- **ProviderRegistry (`backend/app/providers/registry.py`)**: Centrally registers, enables, or disables providers via configuration flags.
 - **Zero Web Scraping**: The system does not scrape external websites or bypass bot-detection terms. Future integrations will connect via official authorized partner APIs using backend environment credentials.
-- **In-Memory Cache**: Built-in TTL caching for static taxonomy data (themes, destinations) eliminates redundant database queries without external dependencies.
+- **In-Memory Cache (`backend/app/services/cache_service.py`)**: Built-in TTL caching for static taxonomy data (themes, destinations, provider health) eliminates redundant database queries without external dependencies.
 
 ---
 
@@ -407,7 +424,7 @@ The Next.js application will start at `http://localhost:3000`.
 To populate the database with the full 107-package demonstration dataset:
 ```bash
 cd backend
-python scripts/seed_database.py
+python scripts/seed_demo_data.py
 ```
 
 ---
