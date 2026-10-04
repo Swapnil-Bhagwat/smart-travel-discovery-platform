@@ -25,7 +25,8 @@ An intelligent, explainable, and extensible travel discovery, comparison, and re
 18. [Testing & Verification Commands](#18-testing--verification-commands)
 19. [Deployment Preparation](#19-deployment-preparation)
 20. [Important Demo-Data Disclaimer](#20-important-demo-data-disclaimer)
-21. [Future Enhancements](#21-future-enhancements)
+21. [AI-Assisted Development](#21-ai-assisted-development)
+22. [Future Enhancements](#22-future-enhancements)
 
 ---
 
@@ -492,7 +493,13 @@ The application is structured for production deployment across containerized or 
 
 ---
 
-## 21. Future Enhancements
+## 21. AI-Assisted Development
+
+This project was developed using AI-assisted development tools, including ChatGPT and Google Antigravity. AI tools were used for implementation assistance, code generation, debugging, documentation, and development workflow support. The project requirements, system architecture, feature decisions, testing, validation, and final technical direction were reviewed and directed by the developer.
+
+---
+
+## 22. Future Enhancements
 
 - **User Accounts & Saved Trips**: User authentication to save, bookmark, and export personalized itineraries.
 - **Authorized Provider Integrations**: Activation of live external provider APIs with authorized partner credentials.
