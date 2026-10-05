@@ -239,5 +239,75 @@ class TestCoreAPIs(unittest.TestCase):
         self.assertEqual(data['error']['message'], 'Resource not found')
 
 
+class TestDatabaseSSLConfig(unittest.TestCase):
+    """Verify TiDB Cloud and MySQL SSL/TLS configuration logic."""
+
+    def setUp(self):
+        import os
+        self._orig_ssl = os.environ.get('MYSQL_SSL')
+        self._orig_ca = os.environ.get('MYSQL_SSL_CA')
+
+    def tearDown(self):
+        import os
+        import importlib
+        if self._orig_ssl is not None:
+            os.environ['MYSQL_SSL'] = self._orig_ssl
+        else:
+            os.environ.pop('MYSQL_SSL', None)
+
+        if self._orig_ca is not None:
+            os.environ['MYSQL_SSL_CA'] = self._orig_ca
+        else:
+            os.environ.pop('MYSQL_SSL_CA', None)
+
+        import app.config
+        importlib.reload(app.config)
+
+    def test_default_ssl_disabled(self):
+        """When MYSQL_SSL is unset or false, SSL connect_args are not included."""
+        import os
+        import importlib
+        os.environ['MYSQL_SSL'] = 'false'
+        os.environ.pop('MYSQL_SSL_CA', None)
+        import app.config
+        importlib.reload(app.config)
+
+        self.assertFalse(app.config.Config.MYSQL_SSL)
+        self.assertNotIn('connect_args', app.config.Config.SQLALCHEMY_ENGINE_OPTIONS)
+
+    def test_tidb_cloud_ssl_enabled_default_ca(self):
+        """When MYSQL_SSL=true without MYSQL_SSL_CA, default Linux CA bundle path is used."""
+        import os
+        import importlib
+        os.environ['MYSQL_SSL'] = 'true'
+        os.environ.pop('MYSQL_SSL_CA', None)
+        import app.config
+        importlib.reload(app.config)
+
+        self.assertTrue(app.config.Config.MYSQL_SSL)
+        opts = app.config.Config.SQLALCHEMY_ENGINE_OPTIONS
+        self.assertIn('connect_args', opts)
+        self.assertTrue(opts['connect_args']['ssl_verify_cert'])
+        self.assertTrue(opts['connect_args']['ssl_verify_identity'])
+        self.assertEqual(opts['connect_args']['ssl_ca'], '/etc/ssl/certs/ca-certificates.crt')
+
+    def test_tidb_cloud_ssl_enabled_custom_ca(self):
+        """When MYSQL_SSL=true with MYSQL_SSL_CA, custom CA bundle path is used."""
+        import os
+        import importlib
+        os.environ['MYSQL_SSL'] = 'true'
+        os.environ['MYSQL_SSL_CA'] = '/etc/pki/tls/certs/custom-ca.pem'
+        import app.config
+        importlib.reload(app.config)
+
+        self.assertTrue(app.config.Config.MYSQL_SSL)
+        opts = app.config.Config.SQLALCHEMY_ENGINE_OPTIONS
+        self.assertIn('connect_args', opts)
+        self.assertTrue(opts['connect_args']['ssl_verify_cert'])
+        self.assertTrue(opts['connect_args']['ssl_verify_identity'])
+        self.assertEqual(opts['connect_args']['ssl_ca'], '/etc/pki/tls/certs/custom-ca.pem')
+
+
 if __name__ == '__main__':
     unittest.main()
+

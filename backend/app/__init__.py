@@ -32,6 +32,15 @@ def create_app(config_class=Config):
 
     CORS(app, resources={r"/api/*": {"origins": cors_origins}})
 
+    # Strip MySQL/TiDB-specific connect_args if testing with SQLite
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    if db_uri.startswith('sqlite') and 'SQLALCHEMY_ENGINE_OPTIONS' in app.config:
+        engine_opts = app.config['SQLALCHEMY_ENGINE_OPTIONS']
+        if isinstance(engine_opts, dict) and 'connect_args' in engine_opts:
+            engine_opts = dict(engine_opts)
+            engine_opts.pop('connect_args', None)
+            app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_opts
+
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)

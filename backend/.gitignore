@@ -3,6 +3,10 @@
 .env.*
 !.env.example
 
+# Certificates & SSL keys
+*.pem
+*.crt
+
 # Python cache & virtual environment
 __pycache__/
 *.py[cod]

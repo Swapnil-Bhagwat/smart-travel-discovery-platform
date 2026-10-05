@@ -20,6 +20,10 @@ class Config:
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')
     MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE', 'smart_travel_db')
     
+    # TiDB Cloud / SSL Configuration
+    MYSQL_SSL = os.environ.get('MYSQL_SSL', 'false').lower() in ('true', '1', 'yes')
+    MYSQL_SSL_CA = os.environ.get('MYSQL_SSL_CA', '').strip()
+
     import urllib.parse
     _encoded_password = urllib.parse.quote_plus(MYSQL_PASSWORD)
     
@@ -32,6 +36,19 @@ class Config:
         'pool_pre_ping': True,
         'pool_recycle': 280,
     }
+
+    # Configure TLS/SSL for TiDB Cloud or production MySQL when enabled
+    if MYSQL_SSL:
+        ssl_ca_path = MYSQL_SSL_CA or '/etc/ssl/certs/ca-certificates.crt'
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_pre_ping': True,
+            'pool_recycle': 280,
+            'connect_args': {
+                'ssl_verify_cert': True,
+                'ssl_verify_identity': True,
+                'ssl_ca': ssl_ca_path,
+            }
+        }
 
     # Step 9 - Provider Architecture Configuration
     DEMO_PROVIDER_ENABLED = os.environ.get('DEMO_PROVIDER_ENABLED', 'true').lower() in ('true', '1', 'yes')
