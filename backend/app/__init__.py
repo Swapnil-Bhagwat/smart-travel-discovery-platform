@@ -15,6 +15,8 @@ from app.routes import (
 
 
 import os
+import logging
+import traceback
 from werkzeug.exceptions import HTTPException
 
 
@@ -22,6 +24,12 @@ def create_app(config_class=Config):
     """Application factory for the Flask backend."""
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # In production (e.g. Render / Gunicorn), bridge Gunicorn error handlers so logs appear in console
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    if gunicorn_logger.handlers:
+        app.logger.handlers = gunicorn_logger.handlers
+        app.logger.setLevel(gunicorn_logger.level)
 
     # Enable Cross-Origin Resource Sharing with configurable origins for production safety
     cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
@@ -70,6 +78,7 @@ def create_app(config_class=Config):
 
     @app.errorhandler(500)
     def internal_error(error):
+        app.logger.error("Internal Server Error (500): %s\n%s", error, traceback.format_exc())
         return jsonify({
             "success": False,
             "error": {
@@ -79,6 +88,14 @@ def create_app(config_class=Config):
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
+        if error.code and error.code >= 500:
+            app.logger.error("HTTPException (%s): %s\n%s", error.code, error, traceback.format_exc())
+            return jsonify({
+                "success": False,
+                "error": {
+                    "message": "Internal server error"
+                }
+            }), 500
         return jsonify({
             "success": False,
             "error": {
@@ -88,7 +105,24 @@ def create_app(config_class=Config):
 
     @app.errorhandler(Exception)
     def handle_generic_exception(error):
-        # Do not expose internal stack trace or credentials in responses
+        if isinstance(error, HTTPException):
+            if error.code and error.code >= 500:
+                app.logger.error("HTTPException (%s): %s\n%s", error.code, error, traceback.format_exc())
+                return jsonify({
+                    "success": False,
+                    "error": {
+                        "message": "Internal server error"
+                    }
+                }), 500
+            return jsonify({
+                "success": False,
+                "error": {
+                    "message": error.description or "Request failed"
+                }
+            }), error.code
+
+        # Log full Python traceback to stderr/stdout for production debugging
+        app.logger.error("Unhandled Exception: %s\n%s", error, traceback.format_exc())
         return jsonify({
             "success": False,
             "error": {

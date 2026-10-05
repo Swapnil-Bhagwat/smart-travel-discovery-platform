@@ -1,5 +1,6 @@
 from decimal import Decimal
-from flask import Blueprint, jsonify, request
+import traceback
+from flask import Blueprint, jsonify, request, current_app
 from sqlalchemy import func, or_
 from sqlalchemy.orm import selectinload
 
@@ -230,29 +231,37 @@ def get_packages():
             )
         )
 
-    # Budget handling & fallback:
-    # 1. Prefer packages within requested budget (price_per_person * travellers <= budget)
-    # 2. If at least one package is within budget, return within-budget packages
-    # 3. If NO package is within budget, return closest packages up to 20% over budget
-    if budget is not None:
-        within_budget_cond = (Package.price_per_person <= (budget / Decimal(travellers)))
-        has_within = query.filter(within_budget_cond).first() is not None
-        if has_within:
-            query = query.filter(within_budget_cond)
-        else:
-            max_fallback_price = (budget * Decimal('1.20')) / Decimal(travellers)
-            query = query.filter(Package.price_per_person <= max_fallback_price)
+    try:
+        # Budget handling & fallback:
+        # 1. Prefer packages within requested budget (price_per_person * travellers <= budget)
+        # 2. If at least one package is within budget, return within-budget packages
+        # 3. If NO package is within budget, return closest packages up to 20% over budget
+        if budget is not None:
+            within_budget_cond = (Package.price_per_person <= (budget / Decimal(travellers)))
+            has_within = query.filter(within_budget_cond).first() is not None
+            if has_within:
+                query = query.filter(within_budget_cond)
+            else:
+                max_fallback_price = (budget * Decimal('1.20')) / Decimal(travellers)
+                query = query.filter(Package.price_per_person <= max_fallback_price)
 
-    # Prevent duplicate rows and eagerly load relationships to avoid N+1 queries
-    query = query.distinct().options(
-        selectinload(Package.operator),
-        selectinload(Package.destination),
-        selectinload(Package.themes),
-        selectinload(Package.travel_types),
-        selectinload(Package.availability_months)
-    )
+        # Prevent duplicate rows and eagerly load relationships to avoid N+1 queries
+        query = query.distinct().options(
+            selectinload(Package.operator),
+            selectinload(Package.destination),
+            selectinload(Package.themes),
+            selectinload(Package.travel_types),
+            selectinload(Package.availability_months)
+        )
 
-    candidate_packages = query.all()
+        candidate_packages = query.all()
+    except Exception as exc:
+        current_app.logger.error(
+            "Database query execution failed in get_packages (/api/v1/packages): %s\n%s",
+            exc,
+            traceback.format_exc()
+        )
+        raise
 
     # Deterministic scoring for package search:
     # Duration: max 25
@@ -486,7 +495,16 @@ def get_package(package_id):
         )
         .filter(Package.id == package_id, Package.is_active.is_(True))
     )
-    package = db.session.execute(stmt).scalar_one_or_none()
+    try:
+        package = db.session.execute(stmt).scalar_one_or_none()
+    except Exception as exc:
+        current_app.logger.error(
+            "Database query execution failed in get_package (/api/v1/packages/%s): %s\n%s",
+            package_id,
+            exc,
+            traceback.format_exc()
+        )
+        raise
 
     if not package:
         return jsonify({
