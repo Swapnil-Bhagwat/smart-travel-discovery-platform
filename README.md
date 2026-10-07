@@ -1,337 +1,372 @@
 # Smart Travel Discovery and Comparison Platform
 
-An intelligent, explainable, and extensible travel discovery, comparison, and recommendation platform built with **Next.js** (TypeScript, Tailwind CSS) and **Flask** (Python, SQLAlchemy, MySQL).
+A web-based platform that helps travellers discover suitable destinations and compare travel packages using budget and travel preferences.
+
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20Vercel-black?style=flat&logo=vercel)](https://smart-travel-discovery-platform.vercel.app)
+[![Backend API](https://img.shields.io/badge/API-Live%20on%20Render-blue?style=flat&logo=render)](https://smart-travel-discovery-platform-api.onrender.com/api/v1/health)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=flat&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?style=flat&logo=tailwindcss)](https://tailwindcss.com/)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776ab?style=flat&logo=python)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.0-black?style=flat&logo=flask)](https://flask.palletsprojects.com/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red?style=flat)](https://www.sqlalchemy.org/)
+[![TiDB Cloud](https://img.shields.io/badge/TiDB_Cloud-MySQL--Compatible-teal?style=flat)](https://tidbcloud.com/)
+
+---
+
+## Live Links
+
+- **Live Application (Frontend)**: [https://smart-travel-discovery-platform.vercel.app](https://smart-travel-discovery-platform.vercel.app)
+- **GitHub Repository**: [https://github.com/Swapnil-Bhagwat/smart-travel-discovery-platform](https://github.com/Swapnil-Bhagwat/smart-travel-discovery-platform)
+- **Live Production API**: [https://smart-travel-discovery-platform-api.onrender.com/api/v1](https://smart-travel-discovery-platform-api.onrender.com/api/v1)
 
 ---
 
 ## Table of Contents
+
 1. [Problem Statement](#1-problem-statement)
-2. [Project Objective](#2-project-objective)
+2. [Solution](#2-solution)
 3. [Core User Flow](#3-core-user-flow)
-4. [Key Features](#4-key-features)
-5. [Technology Stack](#5-technology-stack)
-6. [System Architecture](#6-system-architecture)
-7. [Database Overview](#7-database-overview)
-8. [API Overview](#8-api-overview)
-9. [Recommendation Logic & Scoring Engine](#9-recommendation-logic--scoring-engine)
-10. [Comparison Functionality](#10-comparison-functionality)
-11. [Demo Dataset Specifications](#11-demo-dataset-specifications)
-12. [Provider-Ready Architecture](#12-provider-ready-architecture)
-13. [Installation & Setup](#13-installation--setup)
-14. [Environment Variables](#14-environment-variables)
-15. [How to Run Backend](#15-how-to-run-backend)
-16. [How to Run Frontend](#16-how-to-run-frontend)
-17. [How to Seed Demo Data](#17-how-to-seed-demo-data)
-18. [Testing & Verification Commands](#18-testing--verification-commands)
-19. [Deployment Preparation](#19-deployment-preparation)
-20. [Important Demo-Data Disclaimer](#20-important-demo-data-disclaimer)
-21. [AI-Assisted Development](#21-ai-assisted-development)
-22. [Future Enhancements](#22-future-enhancements)
+4. [MVP Inputs](#4-mvp-inputs)
+5. [Key Features](#5-key-features)
+6. [Recommendation & Matching Logic](#6-recommendation--matching-logic)
+7. [Technology Stack](#7-technology-stack)
+8. [System Architecture](#8-system-architecture)
+9. [Database Overview](#9-database-overview)
+10. [Demo Dataset](#10-demo-dataset)
+11. [Testing & Verification](#11-testing--verification)
+12. [Deployment Architecture](#12-deployment-architecture)
+13. [Limitations](#13-limitations)
+14. [AI-Assisted Development](#14-ai-assisted-development)
+15. [Future Scope](#15-future-scope)
+16. [Local Setup Guide](#16-local-setup-guide)
 
 ---
 
 ## 1. Problem Statement
-Travelers frequently face information overload, fragmented itinerary options across disparate agency websites, opaque pricing models, and unexplainable algorithmic recommendations that push sponsored listings rather than genuine preference matches. Furthermore, side-by-side comparison of day-by-day itineraries, specific inclusions, exclusions, and cost-per-day metrics is tedious and error-prone.
+
+Planning leisure travel typically requires travellers to visit multiple agency websites, search through fragmented listings, parse inconsistent pricing structures, and manually cross-reference itineraries. Key pain points include:
+
+- **Fragmented Research**: Comparing packages from different operators requires juggling dozens of browser tabs and unstructured notes.
+- **Opaque Value & Inclusions**: Identifying what is covered (meals, transfers, hotels) versus hidden out-of-pocket costs is tedious.
+- **Biased Search Listings**: Commercial search aggregators often push sponsored packages rather than results objectively matched to the traveller's budget, group size, and travel interests.
+- **Destination Uncertainty**: Travellers with fixed budgets and themes (e.g., "Beach trip in October for ₹30,000") lack intuitive tools to discover which destinations match their criteria when they have not picked a specific location yet.
 
 ---
 
-## 2. Project Objective
-The **Smart Travel Discovery and Comparison Platform** provides a transparent, explainable, and multi-dimensional search and comparison platform. Key goals include:
-- Transparent, deterministic 100-point recommendation scoring with factual, data-grounded explanations.
-- Dual discovery pathways: direct destination search or guided destination discovery based on travel interests.
-- High-fidelity side-by-side comparison of 2–3 travel packages with dynamic traveller headcount calculations.
-- Clean, provider-ready architectural foundation designed for future authorized external API integrations without website scraping.
+## 2. Solution
+
+The **Smart Travel Discovery and Comparison Platform** provides a centralized, transparent travel evaluation portal that unifies destination discovery, package search, and side-by-side comparison into a coherent workflow:
+
+- **Centralized Catalog**: Standardizes travel packages into a normalized data model covering daily itineraries, line-item inclusions, and exclusions.
+- **Dual Discovery Modes**: Supports travellers who have a specific destination in mind as well as those seeking recommendations based on preferences.
+- **Explainable Recommendation Scoring**: Ranks packages using an objective, deterministic 100-point scoring algorithm with transparent, fact-based match explanations.
+- **Side-by-Side Comparison**: Enables direct comparison of 2–3 travel packages with dynamic traveller headcount multipliers, itinerary diffs, and objective value metrics without declaring arbitrary "winners".
 
 ---
 
 ## 3. Core User Flow
 
-The platform accommodates two intuitive user journeys:
+The application supports two distinct user journeys:
 
-### Journey A: Direct Search & Package Comparison
+### Journey A: Destination Known
 ```text
-Homepage
-   ↓ [User inputs starting city, budget, duration, month, travel type, interest + selects Destination]
-Search Packages
-   ↓
-Package Results (/packages) [Paginated, sorted by 100-point match score]
-   ↓
-Why This Matches / Why Not 100% [Inspect factual data-grounded reasons]
-   ↓
-Add to Compare [Select 2 or 3 packages]
-   ↓
-Side-by-Side Comparison (/compare) [Dynamic headcount pricing, itinerary diff, inclusions/exclusions]
-   ↓
-Package Details (/packages/[id]) [Full itinerary breakdown and operator profile]
-   ↓
-Demo Source Attribution (/sources/packages/[id]) [Transparency and provider audit trail]
+User inputs travel criteria (city, budget, duration, month, group type, interest)
+    ↓
+Selects specific destination
+    ↓
+Views matching packages sorted by 100-point compatibility score
+    ↓
+Reviews factual match breakdown ("Why This Matches" / "Why Not 100%")
+    ↓
+Selects 2 or 3 packages to compare
+    ↓
+Evaluates side-by-side comparison matrix with dynamic headcount pricing
+    ↓
+Inspects detailed day-by-day itinerary and operator information
 ```
 
-### Journey B: Guided Destination Discovery
+### Journey B: Destination Unknown
 ```text
-Homepage
-   ↓ [User inputs preferences and selects "Let me discover a destination"]
-Search Packages
-   ↓
-Destination Suggestions (/discover) [Destinations ranked by interest, budget, and package availability]
-   ↓
-Why This Destination? [Data-grounded suitability explanation]
-   ↓
-View Packages [Transfers all search criteria to /packages for the chosen destination]
-   ↓
-Add to Compare → Side-by-Side Comparison
+User inputs travel criteria (without selecting a destination)
+    ↓
+Guided destination discovery (/discover)
+    ↓
+Reviews recommended destinations scored by interest alignment & budget feasibility
+    ↓
+Selects a suggested destination
+    ↓
+Transitions to filtered packages for the chosen destination
+    ↓
+Selects 2 or 3 packages to compare
+    ↓
+Evaluates side-by-side comparison matrix and package details
 ```
 
 ---
 
-## 4. Key Features
+## 4. MVP Inputs
 
-- **Dual Search Modality**: Search by explicit destination or discover ideal destinations dynamically based on travel interests and budget.
-- **Deterministic 100-Point Recommendation Engine**: 
-  - Budget fit (**25 pts**)
-  - Travel interest match (**25 pts**; also a strict hard filter)
-  - Duration fit (**20 pts**)
-  - Travel type fit (**15 pts**; supports Solo, Couple, Family, Group)
-  - Month availability (**10 pts**)
-  - Starting city departure (**5 pts**; also a strict hard filter)
-- **Strict Hard Filtering**:
-  - Starting city constraint
-  - Travel interest constraint (strict theme matching; non-matching packages are excluded completely)
-  - Explicit destination constraint (when a destination is selected)
-  - Active package status constraint (`is_active = TRUE`)
-  - Over-budget hard exclusion (packages exceeding budget by more than 20% are excluded)
-- **Factual, Explainable Insights**: No black-box algorithms or unsupported superlative claims ("best", "winner", "perfect for you", "most popular"). Every match reason and mismatch notice is fact-checked against real database values.
-- **Side-by-Side Package Comparison**:
-  - Compare 2 to 3 packages simultaneously.
-  - Guard against 4th package addition with clear UI guidance.
-  - Interactive traveller headcount multiplier ($1$ to $10+$ travellers) updating total pricing and per-person cost.
-  - Objective value indicators: lowest price, shortest duration, lowest cost per day, most inclusions.
-- **Seamless Pagination**: Responsive pagination preserving active filter queries and active comparison selections across page navigation.
-- **Demo Source Transparency**: Dedicated verification views showing provider attribution, catalog source type, and verification status.
+The search and recommendation engine operates on 8 practical travel criteria:
+
+| Input | Description | Example |
+|---|---|---|
+| **Starting Point** | Departure city (hard filter) | Delhi, Mumbai, Bangalore |
+| **Total Trip Budget** | Total spending budget in ₹ INR | ₹40,000 |
+| **Travel Interest** | Primary theme / interest (hard filter) | Beach, Heritage, Adventure, Wildlife, Hill Station |
+| **Trip Duration** | Target duration in days | 5 Days |
+| **Travel Type** | Travel party composition | Solo, Couple, Family, Group |
+| **Number of Travellers** | Headcount used for budget & per-person calculations | 2 Travellers |
+| **Travel Month** | Intended month of departure (1–12) | October |
+| **Destination** | *Optional*: Specific destination or guided discovery | Goa, Manali, Jaipur, or Discover |
 
 ---
 
-## 5. Technology Stack
+## 5. Key Features
+
+- **Destination Discovery**: Suggests suitable destinations ranked by theme match, package availability, and budget viability when travellers have not selected a destination.
+- **Package Search**: Multi-criteria search with real-time filtering and deterministic ranking.
+- **Hard Interest Filtering**: Strict enforcement of selected travel interests—packages not matching the requested theme are completely excluded.
+- **Budget-Aware Matching with 20% Fallback**: Prioritizes packages within budget (`price_per_person * travellers <= budget`). If no package fits within budget, surfaces the closest alternatives up to 20% over budget with clear callouts.
+- **Explainable Match Scores**: Each package receives an objective match score (up to 100 points) paired with verified match reasons and factual mismatch notes.
+- **Comprehensive Package Details**: Complete breakdown of hotel tier, meal plans, transport, sightseeing, and activities.
+- **Day-by-Day Itineraries**: Structured daily schedule with day number, title, detailed description, accommodation details, and meals provided.
+- **Itemized Inclusions & Exclusions**: Clear line-item lists identifying covered amenities and excluded personal expenses.
+- **Side-by-Side Comparison (2–3 Packages)**:
+  - Compares 2 or 3 packages simultaneously (blocks 4th addition with informative notice).
+  - Dynamic traveller headcount selector ($1$ to $10+$ travellers) recalculating total cost.
+  - Highlights lowest price, shortest duration, lowest cost per day, and highest inclusion count.
+  - Avoids declaring subjective "overall winners", allowing travellers to weigh trade-offs independently.
+- **Stateful Pagination**: Result pagination (`page`, `per_page`) preserving active search parameters and comparison selections across page transitions.
+- **Provider-Ready Architecture**: Service-layer abstraction (`BaseTravelProvider`, `ProviderRegistry`) designed for future authorized partner API integrations.
+- **Demo Package & Source Attribution**: Dedicated attribution page displaying source metadata and verification badges for demo data transparency.
+
+---
+
+## 6. Recommendation & Matching Logic
+
+### Deterministic 100-Point Scoring Model
+
+The recommendation engine calculates a deterministic compatibility score out of **100 points** across six factual dimensions:
+
+$$\text{Match Score} = 25 (\text{Budget}) + 25 (\text{Interest}) + 20 (\text{Duration}) + 15 (\text{Travel Type}) + 10 (\text{Month}) + 5 (\text{Starting City})$$
+
+| Dimension | Max Points | Scoring Breakdown |
+|---|---|---|
+| **Budget Fit** | **25 pts** | Total cost $\le$ Budget: **25 pts**<br>Over budget by $\le 10\%$: **18 pts**<br>Over budget by $> 10\%$ and $\le 20\%$: **10 pts**<br>Over budget by $> 20\%$: **0 pts** (excluded) |
+| **Travel Interest** | **25 pts** | Exact theme match: **25 pts** *(guaranteed for all returned results due to hard filter)* |
+| **Trip Duration** | **20 pts** | Exact match: **20 pts**<br>Within $\pm 1$ day: **16 pts**<br>Within $\pm 2$ days: **12 pts**<br>Within $\pm 3$ days: **8 pts**<br>Deviation $> 3$ days: **4 pts** |
+| **Travel Type** | **15 pts** | Package supports selected type (`Solo`, `Couple`, `Family`, `Group`): **15 pts**<br>Not supported: **0 pts** |
+| **Availability Month** | **10 pts** | Package operates in requested month (1–12): **10 pts**<br>Not operating: **0 pts** |
+| **Starting City** | **5 pts** | Departs from requested city: **5 pts** *(guaranteed for all returned results due to hard filter)* |
+
+### Strict Hard Filters
+
+Before scoring, the search engine applies non-negotiable hard constraints:
+1. **Travel Interest**: **Strict Hard Filter** — Packages must match the user's selected interest/theme. Non-matching packages are excluded completely.
+2. **Starting City**: Departure city must match the requested origin.
+3. **Explicit Destination**: When a destination is chosen, packages for other destinations are excluded.
+4. **Active Packages Only**: Inactive packages (`is_active = FALSE`) are strictly filtered out.
+5. **Over-Budget Cap**: Packages exceeding the user's total budget by more than 20% are excluded.
+
+### Deterministic vs. ML / LLM Transparency
+
+> **Important**: The current recommendation engine is **100% deterministic and rule-based**. It does **not** rely on Machine Learning (ML), black-box neural networks, or Large Language Models (LLMs). Every score, match reason, and trade-off callout is fact-checked against database attributes, guaranteeing reproducible, auditable, and deterministic scoring without LLM-generated recommendations.
+
+---
+
+## 7. Technology Stack
 
 ### Frontend
 - **Framework**: Next.js 16 (App Router)
-- **UI & Language**: React 19, TypeScript
-- **Styling**: Tailwind CSS v4, Vanilla CSS Design Tokens
-- **Icons & Polish**: Heroicons / Inline SVG
+- **Library**: React 19
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS v4, Custom CSS Design Tokens
+- **Icons**: Inline SVG / Heroicons
 
 ### Backend
-- **Framework**: Python 3.12, Flask
-- **ORM & Database Tooling**: Flask-SQLAlchemy, Flask-Migrate, PyMySQL
-- **Security & Headers**: Flask-CORS, cryptography
-- **Environment Management**: python-dotenv
+- **Language**: Python 3.10+
+- **Framework**: Flask 3.0
+- **ORM & Migrations**: Flask-SQLAlchemy 3.1, Flask-Migrate 4.0, SQLAlchemy 2.0
+- **Database Driver**: PyMySQL (with SSL/TLS verification)
+- **CORS Handling**: Flask-CORS
 
 ### Database
-- **Engine**: MySQL 8.x
-- **User**: Dedicated least-privilege user `travel_app`
-- **Integrity**: Foreign key cascading constraints, indexed queries
+- **Engine**: MySQL 8.0 compatible
+- **Production Database**: TiDB Cloud (Serverless distributed MySQL-compatible database with secure TLS)
+- **Local Development**: Local MySQL 8.x instance
+
+### Deployment & Infrastructure
+- **Frontend Hosting**: Vercel (Edge network, automated CI/CD)
+- **Backend Hosting**: Render (Managed Python Web Service running Gunicorn WSGI)
+- **Database Hosting**: TiDB Cloud (High-availability managed MySQL-compatible cluster)
 
 ---
 
-## 6. System Architecture
+## 8. System Architecture
 
-The application adopts a clean, layered architecture separating user interface, API endpoints, business logic, provider abstraction, and data persistence:
+The application is structured into decoupled layers separating presentation, API routing, business logic, provider abstraction, and relational persistence:
 
 ```text
-Next.js Frontend (Port 3000)
-        ↓ (HTTP / REST JSON)
-Flask REST API (Port 5000)
-        ↓
-Routes (Blueprints: packages, destinations, discover, recommendations, operators, themes, providers, health)
-        ↓
-Business Services
-        ├── Recommendation Service (Deterministic 100-pt scoring & factual explanations)
-        ├── Search Logic (Hard constraints & soft scoring application)
-        └── In-Memory Cache Service (Taxonomy caching with TTL)
-        ↓
-Provider Layer
-        ├── BaseTravelProvider (Abstract interface)
-        ├── ProviderRegistry (Dynamic registration & health)
-        └── ProviderSearchService (Aggregator & deduplicator)
-        ↓
-Demo Provider (MySQL Adapter)
-        ↓
-MySQL Database (smart_travel_db)
+┌───────────────────────────────────────────────────────────┐
+│              Next.js 16 Frontend (Vercel)                 │
+│    App Router | TypeScript | React 19 | Tailwind CSS     │
+└─────────────────────────────┬─────────────────────────────┘
+                              │ HTTPS / REST JSON
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│               Flask 3.0 REST API (Render)                 │
+│         Gunicorn WSGI | Blueprints | CORS Middleware      │
+└─────────────────────────────┬─────────────────────────────┘
+                              │
+         ┌────────────────────┴────────────────────┐
+         ▼                                         ▼
+┌───────────────────────────────┐   ┌───────────────────────────────┐
+│       Business Services       │   │    Provider Abstraction       │
+│  - 100-pt Recommendation Svc  │   │  - BaseTravelProvider (ABC)   │
+│  - Destination Discovery Svc  │   │  - ProviderRegistry           │
+│  - In-Memory Taxonomy Cache   │   │  - DemoProvider (MySQL)       │
+└───────────────┬───────────────┘   └───────────────┬───────────────┘
+                │                                   │
+                └─────────────────┬─────────────────┘
+                                  ▼
+┌───────────────────────────────────────────────────────────┐
+│               SQLAlchemy 2.0 ORM / PyMySQL                │
+└─────────────────────────────┬─────────────────────────────┘
+                              │ TLS / SSL
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│         TiDB Cloud / MySQL-Compatible Database            │
+│       Normalized Schema | Relational Integrity           │
+└───────────────────────────────────────────────────────────┘
 ```
 
-### Recommendation and Comparison Details
-- **Recommendation Service**: Evaluates eligible packages against user preferences using normalized distance metrics for budget and duration, calculating deterministic 100-point scores with data-grounded reasons and factual mismatch notifications.
-- **Comparison Functionality**: The frontend comparison view (`/compare`) fetches individual package details for the 2–3 selected packages via `GET /api/v1/packages/<id>`, dynamically calculates headcount-adjusted costs, compares day-by-day itineraries, counts inclusions/exclusions, and computes factual value highlights without declaring subjective "overall winners".
+### Provider Abstraction Layer
+
+The platform includes an extensible provider architecture located in `backend/app/providers/`:
+- **`BaseTravelProvider`**: Abstract interface defining standard provider methods (`search_packages`, `get_package_details`, `health_check`).
+- **`NormalizedPackage` DTO**: Standardized data transfer object that normalizes incoming provider data into a unified structure (`provider`, `source_type`, `external_id`, `identity`).
+- **`ProviderRegistry`**: Dynamic registry that enables/disables providers via configuration flags (`DEMO_PROVIDER_ENABLED`, etc.).
+- **Zero Web Scraping Policy**: Live providers will connect exclusively through authorized partner APIs once production credentials are provisioned.
 
 ---
 
-## 7. Database Overview
+## 9. Database Overview
 
-The MySQL database `smart_travel_db` enforces relational integrity across 10 normalized tables matching the implemented schema:
+The relational database enforces data integrity across 10 normalized domain tables:
 
-| Table | Description |
-|---|---|
-| `destinations` | 25 Indian destinations with `name`, `region`, `country`, `description`, and `image_url` |
-| `operators` | 10 fictional demo tour operators with `name`, `rating`, `website_url`, `contact_email`, and `contact_phone` |
-| `themes` | 10 travel themes with `name`, `slug`, and `description` |
-| `packages` | 107 total packages (103 active, 4 inactive) with `name`, `starting_city`, `duration_days`, `duration_nights`, `price_per_person`, `is_active`, `hotel_info`, `meals_info`, `transportation_info`, `sightseeing_info`, `activities_info`, `featured_image_url`, and `source_url` |
-| `package_themes` | Many-to-many junction table mapping `packages.id` to `themes.id` |
-| `package_travel_types` | Allowed travel types per package from the enum (`Solo`, `Couple`, `Family`, `Group`) |
-| `package_availability_months` | Operating months (1–12) per package |
-| `package_itineraries` | Day-by-day itinerary entries with `day_number`, `title`, `description`, `accommodation`, and `meals_provided` |
-| `package_inclusions` | Line-item inclusions (`description`) per package |
-| `package_exclusions` | Line-item exclusions (`description`) per package |
-
----
-
-## 8. API Overview
-
-All API endpoints follow a standardized, secure JSON response envelope:
-
-**Success Response (HTTP 200/201):**
-```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
-
-**Error Response (HTTP 400/404/500):**
-```json
-{
-  "success": false,
-  "error": {
-    "message": "Human-readable error description"
-  }
-}
-```
-
-### Registered Endpoints (14 Actual Endpoints)
-
-| Method | Endpoint | Description |
+| Table | Description | Records |
 |---|---|---|
-| `GET` | `/api/v1/health` | Service health check |
-| `GET` | `/api/v1/health/db` | Database connectivity verification |
-| `GET` | `/api/v1/destinations` | List destinations with pagination (`page`, `per_page`) and optional `search`/`name` and `country` filters |
-| `GET` | `/api/v1/destinations/<id>` | Retrieve single destination details by ID |
-| `GET` | `/api/v1/operators` | List demo tour operators with pagination and optional name search |
-| `GET` | `/api/v1/operators/<id>` | Retrieve single operator details by ID |
-| `GET` | `/api/v1/themes` | List all travel themes (cached in-memory) |
-| `GET` | `/api/v1/themes/<id>` | Retrieve single theme details by ID |
-| `GET` | `/api/v1/packages` | Search & score packages (supports pagination, hard filters, soft preferences, and match explanations) |
-| `GET` | `/api/v1/packages/<id>` | Full package details including day-by-day itinerary, inclusions, exclusions, and operator info |
-| `GET` | `/api/v1/discover/destinations` | Destination discovery with suitability scoring and data-grounded reasons based on matching packages |
-| `GET` | `/api/v1/recommendations/packages` | Top-recommended packages based on user preferences and hard constraints |
-| `GET` | `/api/v1/providers` | Provider registry status, health, and enablement |
-| `GET` | `/api/v1/providers/search` | Provider-agnostic package search across enabled providers |
-
-> **Note on Package Comparison**: Side-by-side package comparison is conducted by requesting the selected package IDs via `GET /api/v1/packages/<id>` and assembling the comparative matrix client-side in the `/compare` interface.
+| `destinations` | Travel destinations with name, region, country, description, and images | 25 |
+| `operators` | Tour operators with company name, rating, website, and contact details | 10 |
+| `themes` | Travel categories (Beach, Heritage, Adventure, etc.) with slugs | 10 |
+| `packages` | Core package catalog with duration, pricing, hotel, meal, and transport info | 107 |
+| `package_themes` | Many-to-many junction table mapping packages to themes | 114 |
+| `package_travel_types` | Allowed travel types (`Solo`, `Couple`, `Family`, `Group`) per package | 240+ |
+| `package_availability_months` | Operating months (1–12) per package | 600+ |
+| `package_itineraries` | Day-by-day itineraries with daily title, description, hotel, and meal info | 400+ |
+| `package_inclusions` | Itemized line-item inclusions per package | 400+ |
+| `package_exclusions` | Itemized line-item exclusions per package | 300+ |
 
 ---
 
-## 9. Recommendation Logic & Scoring Engine
+## 10. Demo Dataset
 
-### Hard Filters (Pre-requisites for Inclusion)
-1. **Starting City**: The package departure city must match the user's starting city (case-insensitive).
-2. **Travel Interest**: **HARD FILTER** — If a travel interest is selected, the package **must** have a matching theme (`Theme.name` or `Theme.slug`, case-insensitive). Non-matching packages are excluded completely.
-3. **Explicit Destination**: If searching for a specific destination, packages for all other destinations are excluded.
-4. **Active Packages Only**: Inactive packages (`is_active = FALSE`) are strictly excluded from search and recommendation results.
-5. **Over-Budget Cap**: Packages exceeding the user's total budget by more than 20% are excluded.
+The platform includes a realistic demonstration inventory for testing and portfolio evaluation:
 
-### 100-Point Deterministic Soft Scoring
-Eligible packages that pass all hard filters are scored across six factual dimensions:
-
-1. **Budget Fit (Max 25 Points)**:
-   - Estimated total cost $\le$ Budget: **25 pts** (`within_budget`)
-   - Over budget by $\le 10\%$: **18 pts** (`over_budget`, within 10% fallback)
-   - Over budget by $> 10\%$ and $\le 20\%$: **10 pts** (`over_budget`, within 20% fallback)
-   - Over budget by $> 20\%$: **0 pts** (excluded by hard filter)
-
-2. **Travel Interest Match (25 Points)**:
-   - Matches user's selected interest/theme: **25 pts** (guaranteed for all returned packages due to the hard filter)
-
-3. **Duration Fit (Max 20 Points)**:
-   - Exact duration match: **20 pts**
-   - Within $\pm 1$ day: **16 pts**
-   - Within $\pm 2$ days: **12 pts**
-   - Within $\pm 3$ days: **8 pts**
-   - Deviation $> 3$ days: **4 pts**
-
-4. **Travel Type Fit (Max 15 Points)**:
-   - Package includes the requested travel type (`Solo`, `Couple`, `Family`, `Group`): **15 pts**
-   - Does not include the requested travel type: **0 pts**
-
-5. **Month Availability (Max 10 Points)**:
-   - Package operates in the requested month (1–12): **10 pts**
-   - Not operating in the requested month: **0 pts**
-
-6. **Starting City Departure (5 Points)**:
-   - Departs from the requested starting city: **5 pts** (guaranteed for all returned packages due to the hard filter)
-
-$$\text{Total Match Score} = 25 (\text{Budget}) + 25 (\text{Interest}) + 20 (\text{Duration}) + 15 (\text{Travel Type}) + 10 (\text{Month}) + 5 (\text{Starting City}) = 100 \text{ Points}$$
-
-### Data-Grounded Explanations
-- **Match Reasons**: Generated strictly from verified package attributes (e.g., *"Fits your ₹40,000 total budget"*, *"Matches your Adventure interest"*, *"Matches your 5-day duration preference"*, *"Suitable for Family travel"*, *"Available in October"*, *"Departs from your starting city (Delhi)"*).
-- **Mismatches**: Factual callouts when preferences are not fully met (e.g., *"₹2,500 above your selected budget"*, *"Package is 6 days instead of your preferred 5 days"*, *"Designed for Solo, Group travel"*).
-- **Zero Superlatives**: Unsupported promotional claims (e.g., *"best"*, *"winner"*, *"most popular"*, *"perfect for you"*) are strictly prohibited by code checks.
-
----
-
-## 10. Comparison Functionality
-
-- **Capacity**: Side-by-side comparison of 2 or 3 packages simultaneously.
-- **Safety**: Adding a 4th package is blocked with an informative alert indicating the 3-package limit.
-- **Persistence**: Comparison selections persist across pagination, filter changes, and navigation via local state and URL query parameters (`?ids=1,2,3`).
-- **Dynamic Headcount**: An interactive traveller selector ($1$ to $10+$ travellers) dynamically recalculates total package costs while displaying individual per-person pricing.
-- **Objective Value Analysis**:
-  - Highlights lowest total price.
-  - Highlights shortest duration.
-  - Highlights lowest cost per day.
-  - Highlights package with the highest number of inclusions.
-- **Zero Winner Bias**: Does not declare an overall winner, allowing users to evaluate trade-offs objectively.
-
----
-
-## 11. Demo Dataset Specifications
-
-The local MySQL database contains a curated demonstration inventory:
-- **25 Destinations**: Covering North, South, West, East, and Central India (e.g., Manali, Goa, Jaipur, Munnar, Varanasi, Ladakh, Andaman, Rishikesh, Darjeeling, etc.).
-- **10 Tour Operators**: Fictional demo agencies (e.g., "Himalayan Horizons Demo", "Coastal Breeze Holidays Demo", "Royal Rajasthan Tours Demo") with realistic contact profiles and sample ratings.
+- **25 Destinations**: Covering North, South, West, East, and Central India (e.g., Manali, Goa, Jaipur, Munnar, Varanasi, Ladakh, Andaman, Rishikesh, Darjeeling, Mysore, Udaipur, etc.).
+- **10 Tour Operators**: Realistic fictional agencies (e.g., "Himalayan Horizons Demo", "Coastal Breeze Holidays Demo", "Royal Rajasthan Tours Demo") with sample contact profiles and ratings.
 - **10 Travel Themes**: Beach, Heritage, Adventure, Wildlife, Hill Station, Pilgrimage, Honeymoon, Trekking, Luxury, Cultural.
 - **4 Travel Types**: Solo, Couple, Family, Group.
-- **107 Packages**: 
-  - **103 Active Packages**
-  - **4 Inactive Packages** (used to verify inactive package filtering)
-- **Data Integrity**: Every active package includes complete day-by-day itineraries, itemized inclusions, exclusions, travel types, and operating months.
+- **107 Total Packages**:
+  - **103 Active Packages** (searchable and displayed in catalog)
+  - **4 Inactive Packages** (used to verify inactive package filtering and data integrity)
+
+> **Demo Data Notice**: All package and operator records are realistic sample data created for academic demonstration, automated testing, and portfolio presentation.
 
 ---
 
-## 12. Provider-Ready Architecture
+## 11. Testing & Verification
 
-The platform architecture is decoupled and extensible for future external travel integrations:
-- **BaseTravelProvider (`backend/app/providers/base.py`)**: Defines an abstract contract (`search_packages`, `get_package_details`, `health_check`).
-- **NormalizedPackage DTO (`backend/app/schemas/package_dto.py`)**: Uniform schema translating provider data to a consistent structure (`provider`, `source_type`, `external_id`, `identity`).
-- **ProviderRegistry (`backend/app/providers/registry.py`)**: Centrally registers, enables, or disables providers via configuration flags.
-- **Zero Web Scraping**: The system does not scrape external websites or bypass bot-detection terms. Future integrations will connect via official authorized partner APIs using backend environment credentials.
-- **In-Memory Cache (`backend/app/services/cache_service.py`)**: Built-in TTL caching for static taxonomy data (themes, destinations, provider health) eliminates redundant database queries without external dependencies.
+The platform has been audited and verified:
+
+| Test Suite / Check | Scope | Result |
+|---|---|---|
+| **Backend Unit Tests** | 131 test cases covering search, filters, scoring, DTOs, API endpoints, and caching | **131 Passed (0 Failures, 0 Errors)** |
+| **Frontend Linting** | ESLint static analysis across all TypeScript and React components | **Clean (0 Errors, 0 Warnings)** |
+| **Frontend Production Build** | Next.js Turbopack production compilation and type check | **Build Succeeded** |
+| **Live Production API Checks** | `GET /api/v1/health`<br>`GET /api/v1/health/db`<br>`GET /api/v1/packages?page=1&per_page=5` | **HTTP 200 OK** |
+| **Live End-to-End User Journeys** | Destination discovery, package search, detailed itineraries, and 2–3 package comparison | **Verified Working** |
+
+To run the backend test suite locally:
+```bash
+cd backend
+python -m unittest discover -s tests
+```
 
 ---
 
-## 13. Installation & Setup
+## 12. Deployment Architecture
+
+The application is deployed across production environments:
+
+- **Frontend**: Hosted on [Vercel](https://vercel.com/) with automated deployments from GitHub.
+  - Automatically compiles Next.js App Router static assets and client bundles.
+  - Connected to the backend via `NEXT_PUBLIC_API_BASE_URL`.
+- **Backend**: Hosted on [Render](https://render.com/) as a Python Web Service.
+  - Runs using Gunicorn: `gunicorn -w 4 -b 0.0.0.0:$PORT "app:create_app()"`.
+  - Configured with `CORS_ORIGINS` to allow requests from the Vercel frontend.
+- **Database**: Hosted on [TiDB Cloud](https://tidbcloud.com/) Serverless.
+  - MySQL 8.0-compatible distributed SQL database.
+  - Connects securely using TLS/SSL (`MYSQL_SSL=true`).
+- **Configuration & Secrets**: Handled strictly via platform environment variables; no credentials or secrets are stored in version control.
+
+---
+
+## 13. Limitations
+
+- **Demo/Sample Data**: Package details, prices, and itineraries are curated demo data for demonstration purposes.
+- **Fictional Operators**: Tour operator entities are fictional demonstration profiles.
+- **No Booking or Payment Processing**: The platform is an informational discovery and comparison engine; it does not process live financial transactions.
+- **No Live Provider APIs Enabled**: External provider APIs (Viator, Booking.com) are architectural stubs and are disabled by default until authorized production partner credentials are provisioned.
+- **No Web Scraping**: The project does not scrape third-party travel websites, maintaining ethical data practices.
+- **Deterministic Recommendation Engine**: Recommendations use deterministic rule-based scoring rather than machine learning models.
+
+---
+
+## 14. AI-Assisted Development
+
+This project was developed using AI-assisted development tools, including ChatGPT and Google Antigravity. AI tools were used for implementation assistance, code generation, debugging, documentation, and development workflow support. The project requirements, system architecture, feature decisions, testing, validation, and final technical direction were reviewed and directed by the developer.
+
+---
+
+## 15. Future Scope
+
+- **Authorized Live Provider Integrations**: Connect real-time availability and live pricing via authorized partner APIs.
+- **User Accounts & Saved Itineraries**: User authentication allowing travellers to bookmark packages, save search configurations, and export trip plans.
+- **Machine Learning Recommendations**: Incorporate collaborative filtering and preference embeddings to complement the deterministic baseline.
+- **Price Tracking & Alerts**: Historical price monitoring with email notifications on price drops.
+- **Direct Booking Deep Links**: Integrate affiliate/partner deep links allowing users to book directly on verified operator portals.
+
+---
+
+## 16. Local Setup Guide
 
 ### Prerequisites
 - **Node.js**: v18.0 or higher
 - **Python**: v3.10 or higher
 - **MySQL**: v8.0 or higher
 
-### Step 1: Database Setup
-Log in to MySQL as root or an administrator and create the application database and dedicated user:
-```sql
-CREATE DATABASE smart_travel_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+---
 
-CREATE USER 'travel_app'@'localhost' IDENTIFIED BY 'your_secure_password';
-GRANT ALL PRIVILEGES ON smart_travel_db.* TO 'travel_app'@'localhost';
-FLUSH PRIVILEGES;
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Swapnil-Bhagwat/smart-travel-discovery-platform.git
+cd smart-travel-discovery-platform
 ```
+
+---
 
 ### Step 2: Backend Setup
 ```bash
@@ -351,35 +386,14 @@ pip install -r requirements.txt
 
 # Configure environment variables
 cp .env.example .env
-# Edit .env with your MySQL credentials
 ```
 
-### Step 3: Frontend Setup
-```bash
-cd ../frontend
-
-# Install dependencies
-npm install
-
-# Configure environment variables
-cp .env.example .env.local
-# Set NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:5000/api/v1
-```
-
----
-
-## 14. Environment Variables
-
-### Backend Configuration (`backend/.env`)
-```bash
+Configure `backend/.env` with your local database credentials:
+```env
 FLASK_APP=run.py
 FLASK_ENV=development
 FLASK_DEBUG=1
-HOST=127.0.0.1
-PORT=5000
-SECRET_KEY=your_secret_key_here
-
-CORS_ORIGINS=*
+SECRET_KEY=local-dev-secret-key
 
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
@@ -387,121 +401,44 @@ MYSQL_USER=travel_app
 MYSQL_PASSWORD=your_secure_password
 MYSQL_DATABASE=smart_travel_db
 
+CORS_ORIGINS=*
 DEMO_PROVIDER_ENABLED=true
-VIATOR_ENABLED=false
-BOOKING_ENABLED=false
 ```
 
-### Frontend Configuration (`frontend/.env.local`)
+Run database migrations and seed the demo dataset:
 ```bash
+# Apply migrations
+flask db upgrade
+
+# Seed 107 demo packages across 25 destinations
+python scripts/seed_demo_data.py
+
+# Start the Flask API server
+python run.py
+```
+The backend API will start at `http://127.0.0.1:5000`.
+
+---
+
+### Step 3: Frontend Setup
+In a new terminal window:
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Configure environment variables
+cp .env.example .env.local
+```
+
+Ensure `frontend/.env.local` contains:
+```env
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:5000/api/v1
 ```
 
----
-
-## 15. How to Run Backend
-
-With the Python virtual environment activated:
+Start the Next.js development server:
 ```bash
-cd backend
-python run.py
-```
-The Flask API will start at `http://127.0.0.1:5000`.
-
----
-
-## 16. How to Run Frontend
-
-```bash
-cd frontend
 npm run dev
 ```
-The Next.js application will start at `http://localhost:3000`.
-
----
-
-## 17. How to Seed Demo Data
-
-To populate the database with the full 107-package demonstration dataset:
-```bash
-cd backend
-python scripts/seed_demo_data.py
-```
-
----
-
-## 18. Testing & Verification Commands
-
-### Run Backend Unit Tests (128 Tests)
-```bash
-cd backend
-python -m unittest discover -s tests
-```
-
-### Run Frontend Lint & Build
-```bash
-cd frontend
-npm run lint
-npm run build
-```
-
-### Run Step 10 Comprehensive Audit Script
-```bash
-cd backend
-python scripts/audit_step10_comprehensive.py
-```
-
-### Run Step 10 Manual Verification Matrix Script
-```bash
-cd backend
-python scripts/run_manual_test_matrix.py
-```
-
----
-
-## 19. Deployment Preparation
-
-The application is structured for production deployment across containerized or serverless hosting:
-
-### Frontend Deployment (Next.js)
-- **Platforms**: Vercel, Netlify, AWS Amplify, or a Docker Node container.
-- **Build Command**: `npm run build`
-- **Output**: Static assets + Node.js SSR runtime.
-- **Environment Variable**: Set `NEXT_PUBLIC_API_BASE_URL` to the public production backend URL (e.g. `https://api.yourdomain.com/api/v1`).
-
-### Backend Deployment (Flask)
-- **Platforms**: Render, Railway, AWS ECS, Google Cloud Run, or Ubuntu VPS.
-- **Production Server**: Run using a production WSGI server such as Gunicorn:
-  ```bash
-  gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
-  ```
-- **Security Flags**: Set `FLASK_DEBUG=0` and restrict `CORS_ORIGINS` to the production frontend domain (e.g. `https://travel.yourdomain.com`).
-
-### Database Hosting (MySQL)
-- **Platforms**: AWS RDS MySQL, DigitalOcean Managed MySQL, PlanetScale, or a secured dedicated MySQL 8 instance.
-- **Security**: Store database credentials securely in platform secret managers; never commit `.env` files.
-
----
-
-## 20. Important Demo-Data Disclaimer
-
-> **IMPORTANT DISCLAIMER**:
-> - All travel packages, itineraries, pricing, and hotel details presented on this platform are **curated demonstration data**.
-> - Tour operators listed (e.g., "Himalayan Horizons Demo", "Coastal Breeze Holidays Demo") are **fictional entities** created solely for demonstration and academic evaluation.
-> - This platform **does not process payments or live bookings**.
-> - External live travel provider integrations (Viator, Booking.com) are architectural stubs and are **disabled by default**. No live web scraping is conducted.
-
----
-
-## 21. AI-Assisted Development
-
-This project was developed using AI-assisted development tools, including ChatGPT and Google Antigravity. AI tools were used for implementation assistance, code generation, debugging, documentation, and development workflow support. The project requirements, system architecture, feature decisions, testing, validation, and final technical direction were reviewed and directed by the developer.
-
----
-
-## 22. Future Enhancements
-
-- **User Accounts & Saved Trips**: User authentication to save, bookmark, and export personalized itineraries.
-- **Authorized Provider Integrations**: Activation of live external provider APIs with authorized partner credentials.
-- **Transit Add-ons**: Multi-modal transit calculation (flights, trains, intercity cabs) integrated into overall trip estimates.
-- **Multi-Currency Support**: Real-time currency conversion for international travelers.
+Open `http://localhost:3000` in your browser to view the application.
