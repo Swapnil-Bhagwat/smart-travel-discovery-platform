@@ -12,11 +12,46 @@ import {
   SearchFormData,
 } from "@/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:5000/api/v1";
+export function getApiBaseUrl(): string {
+  let base = (
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    ""
+  ).trim();
+
+  // If no environment variable is provided, default based on environment
+  if (!base) {
+    if (
+      process.env.VERCEL === "1" ||
+      (typeof window !== "undefined" &&
+        window.location.hostname !== "localhost" &&
+        window.location.hostname !== "127.0.0.1")
+    ) {
+      base = "https://smart-travel-discovery-platform-api.onrender.com/api/v1";
+    } else {
+      base = "http://127.0.0.1:5000/api/v1";
+    }
+  }
+
+  // Strip trailing slashes
+  base = base.replace(/\/+$/, "");
+
+  // Ensure /api/v1 suffix is present without duplication
+  if (!base.endsWith("/api/v1")) {
+    if (base.endsWith("/api")) {
+      base = `${base}/v1`;
+    } else {
+      base = `${base}/api/v1`;
+    }
+  }
+
+  return base;
+}
 
 async function request<T>(endpoint: string, options?: RequestInit): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const base = getApiBaseUrl();
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `${base}${cleanEndpoint}`;
 
   try {
     const res = await fetch(url, {
